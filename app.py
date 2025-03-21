@@ -1,8 +1,6 @@
-
-import streamlit as st
 import pandas as pd
+import streamlit as st
 import sqlite3
-import os
 import random
 import pdfplumber
 from datetime import datetime
@@ -71,23 +69,69 @@ def upload_arquivo(empresa_id):
         return uploaded_file
     return None
 
-# Função para análise dos dados (apenas um exemplo de cálculos de indicadores)
-def calcular_indicadores(df):
-    df['Liquidez Corrente'] = df['Ativo Circulante'] / df['Passivo Circulante']
-    df['ROE'] = df['Lucro Líquido'] / df['Patrimônio Líquido']
-    df['EBITDA'] = df['EBIT'] / df['Receita Líquida']
-    return df
+# Função para leitura de dados do arquivo Excel
+def leitura_dados(uploaded_file):
+    if uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+        try:
+            df = pd.read_excel(uploaded_file, sheet_name=None)  # Carregar todas as planilhas
+            # Exibindo as planilhas para ajudar na identificação
+            sheet_names = df.keys()
+            st.write("Planilhas encontradas: ", sheet_names)
+            
+            # Suponhamos que a planilha relevante seja a primeira, vamos pegá-la
+            df = df[next(iter(sheet_names))]  # Pega a primeira planilha
 
-# Função para mostrar o dashboard com os indicadores financeiros
-def dashboard(df):
-    st.title("Dashboard de Indicadores Financeiros")
-    indicadores = calcular_indicadores(df)
+            # Limpando e organizando os dados
+            df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
+            df_cleaned.columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
+            
+            # Verificando as colunas
+            st.write(df_cleaned.head())
+            return df_cleaned
+        except Exception as e:
+            st.error(f"Erro ao ler o arquivo Excel: {e}")
+            return None
+    elif uploaded_file.type == "application/pdf":
+        # Extração de dados de PDF
+        with pdfplumber.open(uploaded_file) as pdf:
+            text = ''
+            for page in pdf.pages:
+                text += page.extract_text()
+        st.text(text)  # Exibindo o conteúdo extraído do PDF
+        return None
+    else:
+        st.error("Tipo de arquivo não suportado.")
+        return None
+
+# Função para calcular os indicadores financeiros
+def calcular_indicadores(df_cleaned):
+    # Identificar as linhas relevantes, como 'ATIVO CIRCULANTE' e 'PASSIVO CIRCULANTE'
+    ativo_circulante = df_cleaned[df_cleaned['Descrição'] == 'ATIVO CIRCULANTE'].iloc[0, 1:]  # Pega os anos
+    passivo_circulante = df_cleaned[df_cleaned['Descrição'] == 'PASSIVO CIRCULANTE'].iloc[0, 1:]  # Pega os anos
+
+    # Convertendo os valores para números
+    ativo_circulante = ativo_circulante.astype(float)
+    passivo_circulante = passivo_circulante.astype(float)
+
+    # Calculando a Liquidez Corrente
+    liquidez_corrente = ativo_circulante / passivo_circulante
+
+    # Criar um DataFrame para exibir os resultados
+    indicadores = pd.DataFrame({
+        'Ano': ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
+        'Ativo Circulante': ativo_circulante,
+        'Passivo Circulante': passivo_circulante,
+        'Liquidez Corrente': liquidez_corrente
+    })
+    
+    # Exibindo os resultados
     st.write(indicadores)
-    st.bar_chart(indicadores[['Liquidez Corrente', 'ROE', 'EBITDA']])
+    return indicadores
 
 # Função principal do Streamlit
 def main():
     st.title("Illumine - Análise de Indicadores Financeiros")
+    
     # Exibir o versículo de Provérbios
     versiculo = versiculo_do_dia()
     st.subheader(f"Versículo do Dia: {versiculo}")
@@ -106,8 +150,9 @@ def main():
             empresa_id = empresas[empresas_names.index(empresa_selecionada)][0]
             uploaded_file = upload_arquivo(empresa_id)
             if uploaded_file:
-                df = pd.read_excel(uploaded_file)
-                dashboard(df)
+                df_cleaned = leitura_dados(uploaded_file)
+                if df_cleaned is not None:
+                    indicadores = calcular_indicadores(df_cleaned)
     
     with col2:
         # Cadastro de nova empresa
