@@ -81,6 +81,11 @@ def leitura_dados(uploaded_file):
             # Verificando as dimensões do DataFrame
             st.write(f"Número de linhas: {df.shape[0]}, Número de colunas: {df.shape[1]}")
             
+            # Se o arquivo não tiver as colunas e linhas esperadas, exibir uma mensagem
+            if df.shape[1] < 8:  # Esperamos no mínimo 8 colunas (1 para Descrição e 7 para os anos)
+                st.error(f"Erro: O arquivo precisa ter pelo menos 8 colunas (descrição + anos).")
+                return None
+            
             # Limpando e organizando os dados
             df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
             df_cleaned.columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
