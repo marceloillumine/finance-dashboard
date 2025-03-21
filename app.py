@@ -130,4 +130,3 @@ def main():
 if __name__ == "__main__":
     setup_db()
     main()
-    st.markdown(f"<h3 style='text-align: center; font-size: 14px; color: #555;'>\"{versiculo}\"</h3>", unsafe_allow_html=True)
