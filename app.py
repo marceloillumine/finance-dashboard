@@ -87,18 +87,19 @@ def leitura_dados(uploaded_file):
             # Verificando as dimensões do DataFrame
             st.write(f"Número de linhas: {df.shape[0]}, Número de colunas: {df.shape[1]}")
             
-            # Garantindo que o arquivo tem colunas esperadas
+            # Garantindo que o arquivo tem as colunas esperadas
             required_columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
-            for col in required_columns:
-                if col not in df.columns:
-                    st.error(f"A coluna '{col}' não foi encontrada no arquivo.")
-                    return None
-
-            # Limpando e organizando os dados
-            df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
-            df_cleaned.columns = required_columns
+            missing_columns = [col for col in required_columns if col not in df.columns]
             
-            st.write(df_cleaned.head())  # Exibe as 5 primeiras linhas dos dados limpos
+            if missing_columns:
+                st.warning(f"As seguintes colunas estão faltando: {', '.join(missing_columns)}")
+            
+            # Limpeza dos dados - Usando as colunas disponíveis
+            df_cleaned = df[['Descrição'] + [col for col in df.columns if col in required_columns[1:]]]
+            df_cleaned.columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
+
+            # Exibe os dados limpos
+            st.write(df_cleaned.head())
             return df_cleaned
         except Exception as e:
             st.error(f"Erro ao ler o arquivo Excel: {e}")
