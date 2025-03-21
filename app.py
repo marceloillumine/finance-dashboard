@@ -81,11 +81,6 @@ def leitura_dados(uploaded_file):
             # Verificando as dimensões do DataFrame
             st.write(f"Número de linhas: {df.shape[0]}, Número de colunas: {df.shape[1]}")
             
-            # Verificando se o arquivo tem o número de colunas e linhas esperado
-            if df.shape[1] < 8:  # Esperamos no mínimo 8 colunas (1 para Descrição e 7 para os anos)
-                st.error(f"Erro: O arquivo precisa ter pelo menos 8 colunas (descrição + anos).")
-                return None
-            
             # Limpando e organizando os dados
             df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
             df_cleaned.columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
@@ -109,72 +104,42 @@ def leitura_dados(uploaded_file):
 
 # Função para calcular todos os indicadores financeiros
 def calcular_indicadores(df_cleaned):
-    # Indicadores de Liquidez
+    # Fórmulas para calcular os indicadores (apenas os exemplos principais)
     ativo_circulante = df_cleaned[df_cleaned['Descrição'] == 'ATIVO CIRCULANTE'].iloc[0, 1:]
     passivo_circulante = df_cleaned[df_cleaned['Descrição'] == 'PASSIVO CIRCULANTE'].iloc[0, 1:]
+
+    # Calcular os indicadores
     liquidez_corrente = ativo_circulante / passivo_circulante
 
-    # Indicadores de Rentabilidade
-    lucro_liquido = df_cleaned[df_cleaned['Descrição'] == 'LUCRO LÍQUIDO'].iloc[0, 1:]
-    patrimonio_liquido = df_cleaned[df_cleaned['Descrição'] == 'PATRIMÔNIO LÍQUIDO'].iloc[0, 1:]
-    ebitda = df_cleaned[df_cleaned['Descrição'] == 'EBITDA'].iloc[0, 1:]
-    receita_liquida = df_cleaned[df_cleaned['Descrição'] == 'RECEITA LÍQUIDA'].iloc[0, 1:]
-    roe = lucro_liquido / patrimonio_liquido
-    rooa = lucro_liquido / ativo_circulante  # ROA
-    roi = lucro_liquido / receita_liquida  # ROI
+    # Adicionar mais indicadores conforme as fórmulas acima
+    roe = df_cleaned[df_cleaned['Descrição'] == 'LUCRO LÍQUIDO'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'PATRIMÔNIO LÍQUIDO'].iloc[0, 1:]
 
-    # Estrutura de Capital
-    ct = df_cleaned[df_cleaned['Descrição'] == 'CAPITAL TOTAL'].iloc[0, 1:]
-    ce_impl = df_cleaned[df_cleaned['Descrição'] == 'CAPITAL DE GIRO'].iloc[0, 1:]
-    irnc = ce_impl / ativo_circulante
-    alavancagem_financeira = ativo_circulante / patrimonio_liquido
-    divida_ebitda = df_cleaned[df_cleaned['Descrição'] == 'DÍVIDA BRUTA'].iloc[0, 1:] / ebitda
-
-    # Indicadores de Fluxo de Caixa
-    gc = df_cleaned[df_cleaned['Descrição'] == 'GERAÇÃO DE CAIXA'].iloc[0, 1:]
-    ngc = df_cleaned[df_cleaned['Descrição'] == 'NECESSIDADE DE GERAÇÃO DE CAIXA'].iloc[0, 1:]
-    st = df_cleaned[df_cleaned['Descrição'] == 'SAÍDAS TOTAIS'].iloc[0, 1:]
-
-    # Indicadores de Atividades
-    co = df_cleaned[df_cleaned['Descrição'] == 'CUSTO DE OPERAÇÃO'].iloc[0, 1:]
-    cf = df_cleaned[df_cleaned['Descrição'] == 'CUSTO FIXO'].iloc[0, 1:]
-    pmrv = df_cleaned[df_cleaned['Descrição'] == 'PONTO DE MARGEM DE RENTABILIDADE VARIÁVEL'].iloc[0, 1:]
-    pmre = df_cleaned[df_cleaned['Descrição'] == 'PONTO DE MARGEM DE RENTABILIDADE ECONÔMICA'].iloc[0, 1:]
-    pmpc = df_cleaned[df_cleaned['Descrição'] == 'PONTO DE MARGEM DE PREÇO DE CUSTO'].iloc[0, 1:]
-
-    # Valuation (P/VPA)
-    pvpa = df_cleaned[df_cleaned['Descrição'] == 'VALOR PATRIMONIAL'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'PREÇO DE MERCADO'].iloc[0, 1:]
-
-    # Criar um DataFrame para exibir os resultados
+    # Criar DataFrame com os indicadores
     indicadores = pd.DataFrame({
         'Ano': ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
         'Liquidez Corrente': liquidez_corrente,
-        'ROE': roe,
-        'ROOA': rooa,
-        'ROI': roi,
-        'EBITDA': ebitda,
-        'IRNC': irnc,
-        'Alavancagem Financeira': alavancagem_financeira,
-        'Dívida/EBITDA': divida_ebitda,
-        'P/VPA': pvpa
+        'ROE': roe
     })
 
-    # Exibindo os resultados
+    # Exibir os indicadores
     st.write(indicadores)
     return indicadores
 
 # Função principal do Streamlit
 def main():
-    st.title("Illumine - Análise de Indicadores Financeiros")
+    # Customizando o estilo da página
+    st.set_page_config(page_title="Illumine - Análise Financeira", page_icon=":chart_with_upwards_trend:", layout="wide")
     
-    # Exibir o versículo de Provérbios
-    versiculo = versiculo_do_dia()
-    st.subheader(f"Versículo do Dia: {versiculo}")
-    
-    # Layout de duas colunas para exibir o cadastro e a seleção da empresa
-    col1, col2 = st.columns(2)
+    # Layout de colunas
+    col1, col2 = st.columns([1, 3])
 
     with col1:
+        # Adicionando o título e o versículo na coluna à esquerda
+        st.markdown("<h1 style='text-align: center; font-size: 35px;'>Illumine</h1>", unsafe_allow_html=True)
+        versiculo = versiculo_do_dia()
+        st.markdown(f"<h3 style='text-align: center; font-size: 14px; color: #555;'>\"{versiculo}\"</h3>", unsafe_allow_html=True)
+    
+    with col2:
         # Mostrar empresas cadastradas
         st.subheader("Empresas Cadastradas")
         empresas = obter_empresas()
@@ -188,13 +153,21 @@ def main():
                 df_cleaned = leitura_dados(uploaded_file)
                 if df_cleaned is not None:
                     indicadores = calcular_indicadores(df_cleaned)
+
+    # Layout para o cadastro de novas empresas
+    st.sidebar.subheader("Cadastro de Nova Empresa")
+    nome_cliente = st.sidebar.text_input("Nome do Cliente")
+    cnpj_cliente = st.sidebar.text_input("CNPJ")
+    email_cliente = st.sidebar.text_input("E-mail")
     
-    with col2:
-        # Cadastro de nova empresa
-        st.subheader("Cadastro de Nova Empresa")
-        nome_cliente = st.text_input("Nome do Cliente")
-        cnpj_cliente = st.text_input("CNPJ")
-        email_cliente = st.text_input("E-mail")
-        
-        if st.button("Cadastrar"):
-            if nome_cliente and
+    if st.sidebar.button("Cadastrar"):
+        if nome_cliente and cnpj_cliente and email_cliente:
+            cadastro_empresa(nome_cliente, cnpj_cliente, email_cliente)
+            st.sidebar.success(f"Empresa {nome_cliente} cadastrada com sucesso!")
+        else:
+            st.sidebar.error("Por favor, preencha todos os campos.")
+
+# Rodar a aplicação
+if __name__ == "__main__":
+    setup_db()
+    main()
