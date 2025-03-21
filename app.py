@@ -103,25 +103,31 @@ def leitura_dados(uploaded_file):
         st.error("Tipo de arquivo não suportado.")
         return None
 
-# Função para calcular os indicadores financeiros
+# Função para calcular todos os indicadores financeiros
 def calcular_indicadores(df_cleaned):
-    # Identificar as linhas relevantes, como 'ATIVO CIRCULANTE' e 'PASSIVO CIRCULANTE'
-    ativo_circulante = df_cleaned[df_cleaned['Descrição'] == 'ATIVO CIRCULANTE'].iloc[0, 1:]  # Pega os anos
-    passivo_circulante = df_cleaned[df_cleaned['Descrição'] == 'PASSIVO CIRCULANTE'].iloc[0, 1:]  # Pega os anos
-
+    # Identificar as linhas relevantes, como 'ATIVO CIRCULANTE', 'PASSIVO CIRCULANTE', etc.
+    ativo_circulante = df_cleaned[df_cleaned['Descrição'] == 'ATIVO CIRCULANTE'].iloc[0, 1:]
+    passivo_circulante = df_cleaned[df_cleaned['Descrição'] == 'PASSIVO CIRCULANTE'].iloc[0, 1:]
+    
     # Convertendo os valores para números
     ativo_circulante = ativo_circulante.astype(float)
     passivo_circulante = passivo_circulante.astype(float)
 
-    # Calculando a Liquidez Corrente
+    # Calcular a Liquidez Corrente
     liquidez_corrente = ativo_circulante / passivo_circulante
 
+    # Outros cálculos de indicadores financeiros (fictícios para exemplo)
+    roe = df_cleaned[df_cleaned['Descrição'] == 'LUCRO LÍQUIDO'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'PATRIMÔNIO LÍQUIDO'].iloc[0, 1:]
+    ebitda = df_cleaned[df_cleaned['Descrição'] == 'EBITDA'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'RECEITA LÍQUIDA'].iloc[0, 1:]
+    
     # Criar um DataFrame para exibir os resultados
     indicadores = pd.DataFrame({
         'Ano': ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
         'Ativo Circulante': ativo_circulante,
         'Passivo Circulante': passivo_circulante,
-        'Liquidez Corrente': liquidez_corrente
+        'Liquidez Corrente': liquidez_corrente,
+        'ROE': roe,
+        'EBITDA': ebitda
     })
     
     # Exibindo os resultados
