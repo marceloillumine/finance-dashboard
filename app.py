@@ -73,22 +73,29 @@ def upload_arquivo(empresa_id):
 def leitura_dados(uploaded_file):
     if uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         try:
+            # Carregar a planilha
             df = pd.read_excel(uploaded_file, sheet_name=None)  # Carregar todas as planilhas
             sheet_names = df.keys()
             st.write("Planilhas encontradas: ", sheet_names)
             df = df[next(iter(sheet_names))]  # Pega a primeira planilha
             
+            # Exibindo as primeiras linhas e colunas para ver a estrutura
+            st.write(f"Primeiras linhas do arquivo:")
+            st.write(df.head())
+
             # Verificando as dimensões do DataFrame
             st.write(f"Número de linhas: {df.shape[0]}, Número de colunas: {df.shape[1]}")
             
-            # Se o arquivo não tiver as colunas e linhas esperadas, exibir uma mensagem
-            if df.shape[1] < 8:  # Esperamos no mínimo 8 colunas (1 para Descrição e 7 para os anos)
-                st.error(f"Erro: O arquivo precisa ter pelo menos 8 colunas (descrição + anos).")
-                return None
+            # Garantindo que o arquivo tem colunas esperadas
+            required_columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
+            for col in required_columns:
+                if col not in df.columns:
+                    st.error(f"A coluna '{col}' não foi encontrada no arquivo.")
+                    return None
             
             # Limpando e organizando os dados
             df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
-            df_cleaned.columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
+            df_cleaned.columns = required_columns
             
             st.write(df_cleaned.head())
             return df_cleaned
@@ -109,6 +116,11 @@ def leitura_dados(uploaded_file):
 
 # Função para calcular todos os indicadores financeiros
 def calcular_indicadores(df_cleaned):
+    # Verificar se as colunas de interesse existem no DataFrame
+    if 'Ativo Circulante' not in df_cleaned['Descrição'].values or 'Passivo Circulante' not in df_cleaned['Descrição'].values:
+        st.error("As colunas de 'Ativo Circulante' ou 'Passivo Circulante' não foram encontradas no arquivo.")
+        return None
+
     # Fórmulas para calcular os indicadores (apenas os exemplos principais)
     ativo_circulante = df_cleaned[df_cleaned['Descrição'] == 'ATIVO CIRCULANTE'].iloc[0, 1:]
     passivo_circulante = df_cleaned[df_cleaned['Descrição'] == 'PASSIVO CIRCULANTE'].iloc[0, 1:]
