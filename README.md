@@ -1,37 +1,25 @@
-# Finance Dashboard
 
-Este é um dashboard interativo de análise de indicadores financeiros para empresas. Cada empresa cadastrada terá seu próprio banco de dados para armazenar os balanços financeiros, permitindo o upload de arquivos de balanço para análise.
+# Illumine - Análise Financeira
 
-## Funcionalidades
+Este aplicativo foi desenvolvido para a análise de indicadores financeiros de balanços contábeis.
 
-- Cadastro de empresas
-- Upload de balanços financeiros em formatos Excel ou PDF
-- Análise financeira por empresa, com gráficos e indicadores
-- Dashboard de indicadores financeiros
+## Instruções de Uso
 
-## Como rodar o projeto
+1. Instale as dependências do Python:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-1. Clone este repositório:
+2. Suba o arquivo de dados contábeis no formato Excel com as colunas:
+    - "Descrição"
+    - "2019, 2020, 2021, 2022, 2023, 2024"
 
-```bash
-git clone https://github.com/seu-usuario/finance-dashboard.git
-cd finance-dashboard
-```
+3. Execute o aplicativo Streamlit:
+    ```bash
+    streamlit run app.py
+    ```
 
-2. Instale as dependências:
+4. Utilize o dashboard para visualizar os indicadores financeiros calculados, como Liquidez Corrente e Alavancagem Financeira.
 
-```bash
-pip install -r requirements.txt
-```
-
-3. Execute o Streamlit:
-
-```bash
-streamlit run app.py
-```
-
-O aplicativo estará disponível no seu navegador em `localhost:8501`.
-
-## Licença
-
-Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para detalhes.
+## Contribuições
+Sinta-se à vontade para melhorar o código e enviar pull requests.
