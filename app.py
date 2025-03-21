@@ -74,18 +74,14 @@ def leitura_dados(uploaded_file):
     if uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         try:
             df = pd.read_excel(uploaded_file, sheet_name=None)  # Carregar todas as planilhas
-            # Exibindo as planilhas para ajudar na identificação
             sheet_names = df.keys()
             st.write("Planilhas encontradas: ", sheet_names)
-            
-            # Suponhamos que a planilha relevante seja a primeira, vamos pegá-la
             df = df[next(iter(sheet_names))]  # Pega a primeira planilha
 
             # Limpando e organizando os dados
             df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
             df_cleaned.columns = ['Descrição', '2019', '2020', '2021', '2022', '2023', '2024', '2025']
             
-            # Verificando as colunas
             st.write(df_cleaned.head())
             return df_cleaned
         except Exception as e:
@@ -105,31 +101,56 @@ def leitura_dados(uploaded_file):
 
 # Função para calcular todos os indicadores financeiros
 def calcular_indicadores(df_cleaned):
-    # Identificar as linhas relevantes, como 'ATIVO CIRCULANTE', 'PASSIVO CIRCULANTE', etc.
+    # Indicadores de Liquidez
     ativo_circulante = df_cleaned[df_cleaned['Descrição'] == 'ATIVO CIRCULANTE'].iloc[0, 1:]
     passivo_circulante = df_cleaned[df_cleaned['Descrição'] == 'PASSIVO CIRCULANTE'].iloc[0, 1:]
-    
-    # Convertendo os valores para números
-    ativo_circulante = ativo_circulante.astype(float)
-    passivo_circulante = passivo_circulante.astype(float)
-
-    # Calcular a Liquidez Corrente
     liquidez_corrente = ativo_circulante / passivo_circulante
 
-    # Outros cálculos de indicadores financeiros (fictícios para exemplo)
-    roe = df_cleaned[df_cleaned['Descrição'] == 'LUCRO LÍQUIDO'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'PATRIMÔNIO LÍQUIDO'].iloc[0, 1:]
-    ebitda = df_cleaned[df_cleaned['Descrição'] == 'EBITDA'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'RECEITA LÍQUIDA'].iloc[0, 1:]
-    
+    # Indicadores de Rentabilidade
+    lucro_liquido = df_cleaned[df_cleaned['Descrição'] == 'LUCRO LÍQUIDO'].iloc[0, 1:]
+    patrimonio_liquido = df_cleaned[df_cleaned['Descrição'] == 'PATRIMÔNIO LÍQUIDO'].iloc[0, 1:]
+    ebitda = df_cleaned[df_cleaned['Descrição'] == 'EBITDA'].iloc[0, 1:]
+    receita_liquida = df_cleaned[df_cleaned['Descrição'] == 'RECEITA LÍQUIDA'].iloc[0, 1:]
+    roe = lucro_liquido / patrimonio_liquido
+    rooa = lucro_liquido / ativo_circulante  # ROA
+    roi = lucro_liquido / receita_liquida  # ROI
+
+    # Estrutura de Capital
+    ct = df_cleaned[df_cleaned['Descrição'] == 'CAPITAL TOTAL'].iloc[0, 1:]
+    ce_impl = df_cleaned[df_cleaned['Descrição'] == 'CAPITAL DE GIRO'].iloc[0, 1:]
+    irnc = ce_impl / ativo_circulante
+    alavancagem_financeira = ativo_circulante / patrimonio_liquido
+    divida_ebitda = df_cleaned[df_cleaned['Descrição'] == 'DÍVIDA BRUTA'].iloc[0, 1:] / ebitda
+
+    # Indicadores de Fluxo de Caixa
+    gc = df_cleaned[df_cleaned['Descrição'] == 'GERAÇÃO DE CAIXA'].iloc[0, 1:]
+    ngc = df_cleaned[df_cleaned['Descrição'] == 'NECESSIDADE DE GERAÇÃO DE CAIXA'].iloc[0, 1:]
+    st = df_cleaned[df_cleaned['Descrição'] == 'SAÍDAS TOTAIS'].iloc[0, 1:]
+
+    # Indicadores de Atividades
+    co = df_cleaned[df_cleaned['Descrição'] == 'CUSTO DE OPERAÇÃO'].iloc[0, 1:]
+    cf = df_cleaned[df_cleaned['Descrição'] == 'CUSTO FIXO'].iloc[0, 1:]
+    pmrv = df_cleaned[df_cleaned['Descrição'] == 'PONTO DE MARGEM DE RENTABILIDADE VARIÁVEL'].iloc[0, 1:]
+    pmre = df_cleaned[df_cleaned['Descrição'] == 'PONTO DE MARGEM DE RENTABILIDADE ECONÔMICA'].iloc[0, 1:]
+    pmpc = df_cleaned[df_cleaned['Descrição'] == 'PONTO DE MARGEM DE PREÇO DE CUSTO'].iloc[0, 1:]
+
+    # Valuation (P/VPA)
+    pvpa = df_cleaned[df_cleaned['Descrição'] == 'VALOR PATRIMONIAL'].iloc[0, 1:] / df_cleaned[df_cleaned['Descrição'] == 'PREÇO DE MERCADO'].iloc[0, 1:]
+
     # Criar um DataFrame para exibir os resultados
     indicadores = pd.DataFrame({
         'Ano': ['2019', '2020', '2021', '2022', '2023', '2024', '2025'],
-        'Ativo Circulante': ativo_circulante,
-        'Passivo Circulante': passivo_circulante,
         'Liquidez Corrente': liquidez_corrente,
         'ROE': roe,
-        'EBITDA': ebitda
+        'ROOA': rooa,
+        'ROI': roi,
+        'EBITDA': ebitda,
+        'IRNC': irnc,
+        'Alavancagem Financeira': alavancagem_financeira,
+        'Dívida/EBITDA': divida_ebitda,
+        'P/VPA': pvpa
     })
-    
+
     # Exibindo os resultados
     st.write(indicadores)
     return indicadores
