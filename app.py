@@ -78,10 +78,11 @@ def leitura_dados(uploaded_file):
             sheet_names = df.keys()
             st.write("Planilhas encontradas: ", sheet_names)
             df = df[next(iter(sheet_names))]  # Pega a primeira planilha
-            
-            # Exibindo as primeiras linhas e colunas para ver a estrutura
+
+            # Exibindo as primeiras linhas e as colunas para ver a estrutura
             st.write(f"Primeiras linhas do arquivo:")
-            st.write(df.head())
+            st.write(df.head())  # Exibe as 5 primeiras linhas para inspecionar
+            st.write(f"Colunas disponíveis: {df.columns.tolist()}")  # Exibe as colunas disponíveis
 
             # Verificando as dimensões do DataFrame
             st.write(f"Número de linhas: {df.shape[0]}, Número de colunas: {df.shape[1]}")
@@ -92,12 +93,12 @@ def leitura_dados(uploaded_file):
                 if col not in df.columns:
                     st.error(f"A coluna '{col}' não foi encontrada no arquivo.")
                     return None
-            
+
             # Limpando e organizando os dados
             df_cleaned = df.iloc[1:, [0, 1, 2, 3, 4, 5, 6, 7]]  # Seleciona as colunas de dados financeiros
             df_cleaned.columns = required_columns
             
-            st.write(df_cleaned.head())
+            st.write(df_cleaned.head())  # Exibe as 5 primeiras linhas dos dados limpos
             return df_cleaned
         except Exception as e:
             st.error(f"Erro ao ler o arquivo Excel: {e}")
